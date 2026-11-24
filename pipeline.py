@@ -1,4 +1,5 @@
 """Educational cryptocurrency market-data pipeline, adapted from the original Colab project."""
+import os
 import sqlite3
 import time
 
@@ -9,19 +10,25 @@ import requests
 BASE_URL = "https://api.coingecko.com/api/v3"
 
 
-def fetch_json(path, params, retries=3):
+def fetch_json(path, params, retries=5):
+    headers = {}
+    api_key = os.getenv("COINGECKO_DEMO_API_KEY")
+    if api_key:
+        headers["x-cg-demo-api-key"] = api_key
     for attempt in range(retries):
-        try:
-            response = requests.get(BASE_URL + path, params=params, timeout=15)
-            if response.status_code != 429:
-                response.raise_for_status()
-                return response.json()
-        except requests.RequestException:
-            if attempt == retries - 1:
-                raise
-        if attempt < retries - 1:
-            time.sleep(2 ** (attempt + 1))
-    raise RuntimeError("CoinGecko retry limit reached")
+        response = requests.get(BASE_URL + path, params=params,
+                                headers=headers, timeout=30)
+        if response.status_code != 429:
+            response.raise_for_status()
+            return response.json()
+        if attempt == retries - 1:
+            raise RuntimeError(f"CoinGecko HTTP 429 for {path}: retry limit reached")
+        delay = min(60 * 2 ** attempt, 240)
+        retry_after = response.headers.get("Retry-After", "")
+        if retry_after.isdigit():
+            delay = max(delay, int(retry_after))
+        print(f"HTTP 429 for {path}; retrying in {delay}s", flush=True)
+        time.sleep(delay)
 
 
 def fetch_top_coins(n=5):
@@ -100,11 +107,12 @@ def main():
         raise RuntimeError("No coins returned")
     frames = []
     for coin in coins:
+        time.sleep(25)
+        print(f"Fetching {coin}...", flush=True)
         frame = fetch_coin_data(coin)
         if frame.empty:
             raise RuntimeError(f"No price data for {coin}")
         frames.append(frame)
-        time.sleep(1.5)
     data = engineer_features(pd.concat(frames, ignore_index=True))
     save_data(data)
     plot_prices(data)
