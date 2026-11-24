@@ -50,7 +50,13 @@ ORDER BY coin;
 python -m unittest discover -s tests -v
 ```
 
-Tests use synthetic observations rather than live market data. The refactored version has not yet been execution-verified.
+Tests use synthetic observations rather than live market data. All three offline tests passed in Google Colab (0.095 seconds) before the API retry update.
+
+## Verified execution
+
+On 24 November 2026, the updated pipeline successfully retrieved Bitcoin, Ethereum, Tether, BNB and USD Coin and reported 155 daily records across five coins in Google Colab. The coin selection and record count may vary on subsequent runs.
+
+The pipeline spaces coin requests by 25 seconds and uses up to five attempts for HTTP 429 responses, with exponential waiting and support for numeric Retry-After headers. An optional CoinGecko Demo API key can be supplied through the `COINGECKO_DEMO_API_KEY` environment variable. Never commit API keys. Network availability and rate limits can still affect execution. The generated chart and database contents have not been independently inspected.
 
 ## Limitations
 
