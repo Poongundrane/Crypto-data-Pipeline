@@ -1,82 +1,63 @@
-# Crypto-data-Pipeline
-End-to-end Python pipeline for fetching, analyzing, and visualizing top cryptocurrency data.
+# Cryptocurrency Market Data Pipeline
 
+An educational Python and SQLite pipeline originally developed for the Programming for Data Analysis module at Dublin Business School. The portfolio version was refactored with AI assistance from the original Colab notebook.
 
-# Cryptocurrency Data Pipeline in Python
+## Architecture
 
-🚀 **End-to-End Python Pipeline for Fetching, Analyzing, and Visualizing Cryptocurrency Market Data**
+CoinGecko REST API → pandas transformations → SQLite → Matplotlib
 
-This project demonstrates a complete **data analytics workflow**: fetching data from the CoinGecko API, processing it, storing it in SQLite, performing feature engineering, and visualizing trends.
+- Fetch the top five cryptocurrencies by market capitalisation and request 30 days of historical data.
+- Align prices, market capitalisation and volume by timestamp.
+- Select the last available observation per UTC calendar day.
+- Calculate indexed prices (base 100), daily returns, 7- and 30-day moving averages and 7-day rolling return volatility.
+- Store historical observations and the latest record per coin in SQLite.
+- Generate a comparative indexed-price chart.
 
----
+## Setup
 
-## **Project Overview**
-- Dynamically fetches the **top 5 cryptocurrencies** by market cap.
-- Handles **API rate limits** and network errors gracefully.
-- Computes key metrics:
-  - Daily returns
-  - 7-day and 30-day moving averages
-  - 7-day rolling volatility
-- Saves processed data in **SQLite** (`crypto_prices` full table + `crypto_summary` latest record table).
-- Includes **unit and integration tests** for data reliability.
-- Visualizes **indexed price trends** to compare coin performance.
-
----
-
-## **Installation & Setup**
-1. Clone the repository:
 ```bash
-git clone https://github.com/<your-username>/crypto-data-pipeline.git
-cd crypto-data-pipeline
+git clone https://github.com/Poongundrane/Crypto-data-Pipeline.git
+cd Crypto-data-Pipeline
+python -m pip install -r requirements.txt
+python pipeline.py
+```
 
+Internet access is required. CoinGecko access policies and rate limits may affect execution. The script uses bounded retries and does not require a hardcoded credential.
 
-Tech Stack
+## Repository structure
 
-Python – Core language for data processing
+- `pipeline.py`: acquisition, transformation, storage and visualisation.
+- `requirements.txt`: Python dependencies.
+- `tests/test_pipeline.py`: offline feature and database checks.
+- `.gitignore`: excludes generated databases, charts and local environment files.
 
-Pandas & NumPy – Data manipulation and calculations
+## Outputs
 
-Matplotlib & Seaborn – Visualization
+- `crypto_data.db`: tables `crypto_prices` and `crypto_summary`.
+- `indexed_prices.png`: comparative price chart.
 
-SQLite – Local database storage
+Example SQL query:
 
-Requests – API calls to CoinGecko
+```sql
+SELECT coin, timestamp, price, ma7, ma30
+FROM crypto_summary
+ORDER BY coin;
+```
 
-Sample Output
-Indexed Price Trends
-| Coin     | Price (USD) | 7-Day Return | 7-Day Volatility |
-| -------- | ----------- | ------------ | ---------------- |
-| bitcoin  | 25000.00    | 0.0123       | 0.0245           |
-| ethereum | 1800.00     | 0.0210       | 0.0321           |
-| ...      | ...         | ...          | ...              |
+## Testing
 
+```bash
+python -m unittest discover -s tests -v
+```
 
-Insights
+Tests use synthetic observations rather than live market data. The refactored version has not yet been execution-verified.
 
-Bitcoin shows lower short-term volatility compared to altcoins.
+## Limitations
 
-Rolling averages highlight clear short-term trends.
+Daily values represent the last available observation, not an official exchange closing price. The latest day may be incomplete. Moving averages use available observations within their windows; missing days are not forward-filled. API availability and coin selection can change. This is an educational project, not a trading system.
 
-Indexed prices make performance comparison across coins easy.
+## Attribution
 
-Next Steps
+Market data: [CoinGecko API](https://www.coingecko.com/en/api). Original academic project by Poongundran Elanthiraiyan. ChatGPT was used as a learning co-pilot in the original coursework and to assist with the portfolio refactor and documentation.
 
-Add interactive dashboards using Plotly or Streamlit
-
-Automate daily data fetches and alerts on unusual volatility
-
-Explore correlations between cryptocurrencies for portfolio or trading insights
-
-License
-
-This project is licensed under the MIT License
-.
-
-Acknowledgements
-
-CoinGecko API
- – For free cryptocurrency data
-
-
-
-
+See LICENSE for code licensing. Data remains subject to the provider's terms.
