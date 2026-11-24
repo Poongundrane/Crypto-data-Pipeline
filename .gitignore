@@ -1,0 +1,7 @@
+__pycache__/
+.pytest_cache/
+.venv/
+*.db
+indexed_prices.png
+.ipynb_checkpoints/
+.env
